@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RETRO REVIVAL - Snake Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+            color: #00ff00;
+        }
+
+        .container {
+            background: #0a0e27;
+            border: 3px solid #00ff00;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.5);
+            max-width: 900px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff00;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            color: #00ff00;
+            margin-bottom: 5px;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 10px #00ff00; }
+            50% { text-shadow: 0 0 30px #00ff00; }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            background: #1a3a52;
+            border: 2px solid #00ccff;
+            color: #00ccff;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-family: 'Courier New', monospace;
+            text-transform: uppercase;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        .tab-btn.active {
+            background: #00ccff;
+            color: #000;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 250px;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        #gameCanvas {
+            background: #000;
+            border: 2px solid #00ff00;
+            display: block;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+        }
+
+        .panel {
+            background: #1a2849;
+            border: 2px solid #00ccff;
+            padding: 12px;
+            border-radius: 3px;
+            box-shadow: 0 0 15px rgba(0, 204, 255, 0.3);
+        }
+
+        .panel-title {
+            color: #00ccff;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            margin-bottom: 10px;
+            text-align: center;
+            border-bottom: 1px solid #00ccff;
+            padding-bottom: 5px;
+        }
+
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #00ff00;
+        }
+
+        .stat-value {
+            color: #ffff00;
+            font-weight: bold;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin: 10px 0;
+        }
+
+        .btn {
+            background: #1a3a52;
+            border: 1px solid #00ccff;
+            color: #00ccff;
+            padding: 6px;
+            cursor: pointer;
+            font-size: 0.7em;
+            border-radius: 2px;
+        }
+
+        .btn:hover {
+            background: #00ccff;
+            color: #000;
+        }
+
+        .btn-main {
+            background: #00ff00;
+            border: 2px solid #00ff00;
+            color: #000;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: bold;
+            border-radius: 3px;
+            margin: 5px;
+        }
+
+        .btn-main:hover {
+            background: #00ccff;
+            border-color: #00ccff;
+        }
+
+        .controls-group {
+            text-align: center;
+            margin: 15px 0;
+        }
+
+        .status {
+            text-align: center;
+            color: #ffff00;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin: 10px 0;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .setting {
+            background: #0a1628;
+            border: 1px solid #00ccff;
+            padding: 8px;
+            border-radius: 2px;
+        }
+
+        .setting-title {
+            color: #00ccff;
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .option-btns {
+            display: flex;
+            gap: 3px;
+        }
+
+        .opt-btn {
+            background: #1a3a52;
+            border: 1px solid #00ccff;
+            color: #00ccff;
+            padding: 4px 8px;
+            cursor: pointer;
+            flex: 1;
+            font-size: 0.7em;
+            border-radius: 2px;
+        }
+
+        .opt-btn.active {
+            background: #00ccff;
+            color: #000;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎮 RETRO REVIVAL 🎮</h1>
+            <p>Advanced Snake with AI</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab(0)">GAME</button>
+            <button class="tab-btn" onclick="switchTab(1)">SETTINGS</button>
+            <button class="tab-btn" onclick="switchTab(2)">STATS</button>
+            <button class="tab-btn" onclick="switchTab(3)">ACHIEVEMENTS</button>
+            <button class="tab-btn" onclick="switchTab(4)">AI MODE</button>
+        </div>
+
+        <!-- GAME TAB -->
+        <div class="tab-content active">
+            <div class="main-grid">
+                <div>
+                    <canvas id="gameCanvas" width="500" height="500"></canvas>
+                    <div class="status" id="status">PRESS SPACE TO START</div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-title">📊 STATS</div>
+                    <div class="stat">
+                        <span class="stat-label">Score:</span>
+                        <span class="stat-value" id="score">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Level:</span>
+                        <span class="stat-value" id="level">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Length:</span>
+                        <span class="stat-value" id="length">1</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Speed:</span>
+                        <span class="stat-value" id="speed">Normal</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Combo:</span>
+                        <span class="stat-value" id="combo">0x</span>
+                    </div>
+
+                    <div class="panel-title" style="margin-top: 15px;">🤖 AI ADVICE</div>
+                    <div style="background: #0a1628; border-left: 3px solid #ffff00; padding: 8px; border-radius: 2px; color: #ffff00; font-size: 0.85em;">
+                        <div id="aiAdvice">🎮 Ready to play!</div>
+                    </div>
+
+                    <div class="button-grid" style="margin-top: 15px;">
+                        <button class="btn" onclick="moveSnake(0, -1)">▲</button>
+                        <button class="btn" onclick="pauseGame()">⏸</button>
+                        <button class="btn" onclick="toggleSound()">🔊</button>
+                        <button class="btn" onclick="moveSnake(-1, 0)">◄</button>
+                        <button class="btn" onclick="resetGame()">🔄</button>
+                        <button class="btn" onclick="moveSnake(1, 0)">►</button>
+                        <button class="btn" style="grid-column: 1/4;" onclick="moveSnake(0, 1)">▼</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="controls-group">
+                <button class="btn-main" onclick="startGame()">▶ START</button>
+                <button class="btn-main" onclick="resetGame()">🔄 RESET</button>
+            </div>
+        </div>
+
+        <!-- SETTINGS TAB -->
+        <div class="tab-content">
+            <div class="settings-grid">
+                <div class="setting">
+                    <div class="setting-title">Difficulty</div>
+                    <div class="option-btns">
+                        <button class="opt-btn active" onclick="setDiff(this, 150)">Easy</button>
+                        <button class="opt-btn" onclick="setDiff(this, 100)">Med</button>
+                        <button class="opt-btn" onclick="setDiff(this, 60)">Hard</button>
+                    </div>
+                </div>
+
+                <div class="setting">
+                    <div class="setting-title">Sound</div>
+                    <div class="option-btns">
+                        <button class="opt-btn active" onclick="toggleSoundSetting(this)">ON</button>
+                        <button class="opt-btn" onclick="toggleSoundSetting(this)">OFF</button>
+                    </div>
+                </div>
+
+                <div class="setting">
+                    <div class="setting-title">Grid Size</div>
+                    <div class="option-btns">
+                        <button class="opt-btn active" onclick="setGridSize(this, 20)">20x20</button>
+                        <button class="opt-btn" onclick="setGridSize(this, 15)">15x15</button>
+                        <button class="opt-btn" onclick="setGridSize(this, 25)">25x25</button>
+                    </div>
+                </div>
+
+                <div class="setting">
+                    <div class="setting-title">Game Mode</div>
+                    <div class="option-btns">
+                        <button class="opt-btn active" onclick="setGameMode(this, 'classic')">Classic</button>
+                        <button class="opt-btn" onclick="setGameMode(this, 'obstacles')">Obstacles</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS TAB -->
+        <div class="tab-content">
+            <div class="settings-grid">
+                <div class="setting">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; color: #ffff00; font-weight: bold;">Total Games</div>
+                        <div style="font-size: 1.5em; color: #00ccff;" id="totalGames">0</div>
+                    </div>
+                </div>
+                <div class="setting">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; color: #ffff00; font-weight: bold;">Best Score</div>
+                        <div style="font-size: 1.5em; color: #00ccff;" id="bestScore">0</div>
+                    </div>
+                </div>
+                <div class="setting">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; color: #ffff00; font-weight: bold;">Avg Score</div>
+                        <div style="font-size: 1.5em; color: #00ccff;" id="avgScore">0</div>
+                    </div>
+                </div>
+                <div class="setting">
+                    <div style="text-align: center;">
+                        <div style="font-size: 2em; color: #ffff00; font-weight: bold;">Max Length</div>
+                        <div style="font-size: 1.5em; color: #00ccff;" id="maxLength">0</div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; text-align: center;">
+                <button class="btn-main" onclick="clearStats()">Clear Stats</button>
+            </div>
+        </div>
+
+        <!-- ACHIEVEMENTS TAB -->
+        <div class="tab-content">
+            <div id="achievementsList"></div>
+        </div>
+
+        <!-- AI MODE TAB -->
+        <div class="tab-content">
+            <div class="panel">
+                <div class="panel-title">🤖 AI AUTO-PLAY</div>
+                <p style="color: #00ccff; margin: 10px 0;">Watch AI play the game!</p>
+                <div style="display: flex; gap: 10px; margin: 15px 0;">
+                    <button class="btn-main" onclick="startAIGame('easy')">🟢 Easy</button>
+                    <button class="btn-main" onclick="startAIGame('medium')">🟡 Medium</button>
+                    <button class="btn-main" onclick="startAIGame('hard')">🔴 Hard</button>
+                </div>
+                <div style="background: #0a1628; padding: 10px; border: 1px solid #00ccff; border-radius: 2px;">
+                    <div class="stat">
+                        <span class="stat-label">AI Playing:</span>
+                        <span class="stat-value" id="aiPlaying">No</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">AI Score:</span>
+                        <span class="stat-value" id="aiScore">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">AI Best:</span>
+                        <span class="stat-value" id="aiBest">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let GRID_SIZE = 20;
+        let CELL_SIZE = canvas.width / GRID_SIZE;
+        let gameSpeed = 150;
+
+        let snake = [[10, 10]];
+        let food = [15, 15];
+        let direction = [1, 0];
+        let nextDir = [1, 0];
+        let gameActive = false;
+        let gamePaused = false;
+        let gameOver = false;
+        let score = 0;
+        let combo = 0;
+        let soundEnabled = true;
+        let gameMode = 'classic';
+        let obstacles = [];
+        let aiActive = false;
+        let aiBest = 0;
+        let aiDifficulty = 'easy';
+
+        let stats = { games: 0, bestScore: 0, totalScore: 0, maxLength: 0 };
+        let achievements = [
+            { name: 'First Blood', desc: 'Score 10', icon: '🩸', unlocked: false, check: (s) => s >= 10 },
+            { name: 'Growing', desc: 'Length 5', icon: '📏', unlocked: false, check: (s, l) => l >= 5 },
+            { name: 'Hungry', desc: 'Score 50', icon: '😋', unlocked: false, check: (s) => s >= 50 },
+            { name: 'Master', desc: 'Score 100', icon: '👑', unlocked: false, check: (s) => s >= 100 },
+            { name: 'Legendary', desc: 'Score 200', icon: '⭐', unlocked: false, check: (s) => s >= 200 },
+            { name: 'Speedster', desc: 'Level 3', icon: '⚡', unlocked: false, check: (s) => s >= 150 },
+            { name: 'Combo', desc: '5x Combo', icon: '🔥', unlocked: false, check: (s, l, c) => c >= 5 },
+            { name: 'Perfect', desc: '20 First Game', icon: '✨', unlocked: false, check: (s) => s >= 20 }
+        ];
+
+        function switchTab(index) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-content')[index].classList.add('active');
+            document.querySelectorAll('.tab-btn')[index].classList.add('active');
+            
+            if (index === 2) updateStatsDisplay();
+            if (index === 3) renderAchievements();
+        }
+
+        function drawGame() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * CELL_SIZE, 0);
+                ctx.lineTo(i * CELL_SIZE, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * CELL_SIZE);
+                ctx.lineTo(canvas.width, i * CELL_SIZE);
+                ctx.stroke();
+            }
+
+            ctx.fillStyle = '#ffff00';
+            ctx.shadowColor = '#ffff00';
+            ctx.shadowBlur = 10;
+            ctx.fillRect(food[0] * CELL_SIZE + 2, food[1] * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+
+            snake.forEach((seg, i) => {
+                ctx.fillStyle = i === 0 ? '#00ff00' : '#00cc00';
+                ctx.shadowColor = i === 0 ? '#00ff00' : '#00cc00';
+                ctx.fillRect(seg[0] * CELL_SIZE + 1, seg[1] * CELL_SIZE + 1, CELL_SIZE - 2, CELL_SIZE - 2);
+            });
+
+            obstacles.forEach(obs => {
+                ctx.fillStyle = '#ff0000';
+                ctx.fillRect(obs[0] * CELL_SIZE + 2, obs[1] * CELL_SIZE + 2, CELL_SIZE - 4, CELL_SIZE - 4);
+            });
+
+            ctx.shadowBlur = 0;
+        }
+
+        function updateGame() {
+            if (!gameActive || gamePaused || gameOver) return;
+
+            direction = nextDir;
+            let head = snake[0];
+            let newHead = [head[0] + direction[0], head[1] + direction[1]];
+
+            if (newHead[0] < 0 || newHead[0] >= GRID_SIZE || newHead[1] < 0 || newHead[1] >= GRID_SIZE) {
+                endGame();
+                return;
+            }
+
+            if (snake.some(seg => seg[0] === newHead[0] && seg[1] === newHead[1])) {
+                endGame();
+                return;
+            }
+
+            if (gameMode === 'obstacles' && obstacles.some(obs => obs[0] === newHead[0] && obs[1] === newHead[1])) {
+                endGame();
+                return;
+            }
+
+            snake.unshift(newHead);
+
+            if (newHead[0] === food[0] && newHead[1] === food[1]) {
+                playSound(800, 0.1);
+                score += 10;
+                combo++;
+                food = generateFood();
+            } else {
+                snake.pop();
+            }
+
+            updateUI();
+            drawGame();
+        }
+
+        function generateFood() {
+            let pos;
+            let valid = false;
+            while (!valid) {
+                pos = [Math.floor(Math.random() * GRID_SIZE), Math.floor(Math.random() * GRID_SIZE)];
+                valid = !snake.some(s => s[0] === pos[0] && s[1] === pos[1]) &&
+                        !obstacles.some(o => o[0] === pos[0] && o[1] === pos[1]);
+            }
+            return pos;
+        }
+
+        function generateObstacles() {
+            obstacles = [];
+            if (gameMode === 'obstacles') {
+                for (let i = 0; i < 5; i++) {
+                    let obs;
+                    let valid = false;
+                    while (!valid) {
+                        obs = [Math.floor(Math.random() * GRID_SIZE), Math.floor(Math.random() * GRID_SIZE)];
+                        valid = !snake.some(s => s[0] === obs[0] && s[1] === obs[1]) && 
+                                !(food[0] === obs[0] && food[1] === obs[1]);
+                    }
+                    obstacles.push(obs);
+                }
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('length').textContent = snake.length;
+            document.getElementById('level').textContent = Math.floor(score / 50) + 1;
+            document.getElementById('combo').textContent = combo + 'x';
+            document.getElementById('speed').textContent = gameSpeed <= 60 ? 'FAST' : gameSpeed <= 100 ? 'NORMAL' : 'SLOW';
+
+            const head = snake[0];
+            const dx = food[0] - head[0];
+            const dy = food[1] - head[1];
+            let advice = '🎮 Navigate!';
+            if (Math.abs(dx) > Math.abs(dy)) {
+                advice = dx > 0 ? '→ Go Right' : '← Go Left';
+            } else {
+                advice = dy > 0 ? '↓ Go Down' : '↑ Go Up';
+            }
+            document.getElementById('aiAdvice').textContent = advice;
+
+            checkAchievements();
+        }
+
+        function startGame() {
+            if (gameActive) return;
+            gameActive = true;
+            gamePaused = false;
+            gameOver = false;
+            document.getElementById('status').textContent = '▶ GAME RUNNING';
+            let loop = setInterval(() => {
+                if (!gameActive) clearInterval(loop);
+                updateGame();
+            }, gameSpeed);
+        }
+
+        function pauseGame() {
+            if (!gameActive) return;
+            gamePaused = !gamePaused;
+            document.getElementById('status').textContent = gamePaused ? '⏸ PAUSED' : '▶ RUNNING';
+        }
+
+        function moveSnake(dx, dy) {
+            if (gameActive && !gameOver && (direction[0] !== -dx || direction[1] !== -dy)) {
+                nextDir = [dx, dy];
+            }
+        }
+
+        function resetGame() {
+            gameActive = false;
+            gameOver = false;
+            gamePaused = false;
+            snake = [[10, 10]];
+            food = generateFood();
+            direction = [1, 0];
+            nextDir = [1, 0];
+            score = 0;
+            combo = 0;
+            generateObstacles();
+            document.getElementById('status').textContent = 'PRESS SPACE TO START';
+            drawGame();
+            updateUI();
+        }
+
+        function endGame() {
+            gameActive = false;
+            gameOver = true;
+            stats.games++;
+            if (score > stats.bestScore) stats.bestScore = score;
+            stats.totalScore += score;
+            if (snake.length > stats.maxLength) stats.maxLength = snake.length;
+            document.getElementById('status').textContent = `☠ GAME OVER | Score: ${score}`;
+        }
+
+        function setDiff(btn, speed) {
+            gameSpeed = speed;
+            btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function toggleSoundSetting(btn) {
+            soundEnabled = !soundEnabled;
+            btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+        }
+
+        function setGridSize(btn, size) {
+            GRID_SIZE = size;
+            CELL_SIZE = canvas.width / GRID_SIZE;
+            resetGame();
+            btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function setGameMode(btn, mode) {
+            gameMode = mode;
+            generateObstacles();
+            btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function playSound(freq, dur) {
+            if (!soundEnabled) return;
+            try {
+                const ac = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ac.createOscillator();
+                const gain = ac.createGain();
+                osc.connect(gain);
+                gain.connect(ac.destination);
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(dur, ac.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.1);
+                osc.start(ac.currentTime);
+                osc.stop(ac.currentTime + 0.1);
+            } catch (e) {}
+        }
+
+        function updateStatsDisplay() {
+            document.getElementById('totalGames').textContent = stats.games;
+            document.getElementById('bestScore').textContent = stats.bestScore;
+            document.getElementById('avgScore').textContent = stats.games > 0 ? Math.floor(stats.totalScore / stats.games) : 0;
+            document.getElementById('maxLength').textContent = stats.maxLength;
+        }
+
+        function clearStats() {
+            stats = { games: 0, bestScore: 0, totalScore: 0, maxLength: 0 };
+            updateStatsDisplay();
+        }
+
+        function checkAchievements() {
+            achievements.forEach(ach => {
+                if (!ach.unlocked && ach.check(score, snake.length, combo)) {
+                    ach.unlocked = true;
+                    playSound(1200, 0.2);
+                }
+            });
+        }
+
+        function renderAchievements() {
+            let html = '';
+            achievements.forEach(ach => {
+                html += `<div style="background: ${ach.unlocked ? '#0a1628' : '#1a3a52'}; border-left: 3px solid ${ach.unlocked ? '#ffff00' : '#666'}; padding: 10px; margin: 5px 0; border-radius: 2px; opacity: ${ach.unlocked ? '1' : '0.5'};">
+                    <span style="font-size: 1.5em;">${ach.icon}</span> <strong>${ach.name}</strong> - ${ach.desc}
+                </div>`;
+            });
+            document.getElementById('achievementsList').innerHTML = html;
+        }
+
+        function startAIGame(diff) {
+            aiDifficulty = diff;
+            aiActive = true;
+            gameActive = false;
+            gameOver = false;
+            snake = [[10, 10]];
+            food = generateFood();
+            direction = [1, 0];
+            score = 0;
+            combo = 0;
+            
+            document.getElementById('aiPlaying').textContent = 'Yes';
+            document.getElementById('status').textContent = '🤖 AI PLAYING - ' + diff.toUpperCase();
+            
+            let aiLoop = setInterval(() => {
+                if (!aiActive) {
+                    clearInterval(aiLoop);
+                    return;
+                }
+                updateAIGame();
+            }, diff === 'easy' ? 200 : diff === 'medium' ? 120 : 70);
+        }
+
+        function updateAIGame() {
+            if (!aiActive) return;
+            
+            let head = snake[0];
+            let bestDir = findBestPath(head, food);
+            direction = bestDir;
+            
+            let newHead = [head[0] + direction[0], head[1] + direction[1]];
+
+            // Wall collision
+            if (newHead[0] < 0 || newHead[0] >= GRID_SIZE || newHead[1] < 0 || newHead[1] >= GRID_SIZE) {
+                endAIGame();
+                return;
+            }
+
+            // Self collision
+            if (snake.some(seg => seg[0] === newHead[0] && seg[1] === newHead[1])) {
+                endAIGame();
+                return;
+            }
+
+            snake.unshift(newHead);
+
+            // Food collision
+            if (newHead[0] === food[0] && newHead[1] === food[1]) {
+                playSound(800, 0.1);
+                score += 10;
+                combo++;
+                food = generateFood();
+            } else {
+                snake.pop();
+            }
+
+            document.getElementById('aiScore').textContent = score;
+            if (score > aiBest) {
+                aiBest = score;
+                document.getElementById('aiBest').textContent = aiBest;
+            }
+
+            drawGame();
+        }
+
+        function findBestPath(head, food) {
+            const dx = food[0] - head[0];
+            const dy = food[1] - head[1];
+            
+            let possibleMoves = [];
+            
+            if (dx > 0 && direction[0] !== -1) possibleMoves.push([1, 0]);
+            if (dx < 0 && direction[0] !== 1) possibleMoves.push([-1, 0]);
+            if (dy > 0 && direction[1] !== -1) possibleMoves.push([0, 1]);
+            if (dy < 0 && direction[1] !== 1) possibleMoves.push([0, -1]);
+            
+            if (possibleMoves.length === 0) {
+                possibleMoves = [[1, 0], [-1, 0], [0, 1], [0, -1]].filter(m => 
+                    (m[0] === 0 || direction[0] !== -m[0]) && 
+                    (m[1] === 0 || direction[1] !== -m[1])
+                );
+            }
+            
+            // Avoid walls
+            possibleMoves = possibleMoves.filter(move => {
+                let newPos = [head[0] + move[0], head[1] + move[1]];
+                return newPos[0] >= 0 && newPos[0] < GRID_SIZE && 
+                       newPos[1] >= 0 && newPos[1] < GRID_SIZE &&
+                       !snake.some(seg => seg[0] === newPos[0] && seg[1] === newPos[1]);
+            });
+            
+            return possibleMoves.length > 0 ? possibleMoves[0] : direction;
+        }
+
+        function endAIGame() {
+            aiActive = false;
+            document.getElementById('aiPlaying').textContent = 'No';
+            document.getElementById('status').textContent = `🤖 AI GAME OVER | Score: ${score}`;
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ') { e.preventDefault(); if (!gameActive) startGame(); }
+            if (e.key === 'ArrowUp') { e.preventDefault(); moveSnake(0, -1); }
+            if (e.key === 'ArrowDown') { e.preventDefault(); moveSnake(0, 1); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); moveSnake(-1, 0); }
+            if (e.key === 'ArrowRight') { e.preventDefault(); moveSnake(1, 0); }
+        });
+
+        resetGame();
+        renderAchievements();
+    </script>
+</body>
+</html>
